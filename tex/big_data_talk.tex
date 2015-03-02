@@ -75,6 +75,159 @@
   \frametitle{For which models are the methods applicable?}
 \end{frame}
 
+\section{VB}
+
+\begin{frame}
+  \frametitle{Variational inference basics}
+
+  \begin{itemize}
+  \item Idea: approximate the posterior distribution $p(\parameters | \dataset)$
+    with another distribution $q(\parameters)$ that is analytically tractable
+  \item Learn the approximation by minimizing the distance between $q(\parameters)$ and $p(\parameters | \dataset)$
+  \item The distance is measured by the Kullback-Leibler divergence
+    $D(q||p) = \int q(\parameters) \log \frac{q(\parameters)}{p(\parameters| \dataset)}\diff \parameters$
+  \item ...and the minimization is often converted into maximizing a lower bound on the marginal
+    likelihood (ELBO):
+    $L = \int q(\parameters) \log \frac{p(\dataset,\parameters)}{q(\parameters)} \diff \parameters= p(\dataset) - D(q||p)$
+  \item Predictions then made by replacing $\int p(\vx|\parameters) p(\parameters | \dataset) \diff \parameters$ by
+    $\int p(\vx|\parameters) q(\parameters) \diff \parameters$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Mean-field variational inference}
+
+  \begin{itemize}
+    \item Often $q(\parameters)$ is factorized as $\prod_i q(\parameters_i)$, so that
+      we can optimize one factor at a time
+    \item Differentiating wrt to $q(\parameters_i)$ and setting the derivative to zero provides a closed-form
+      update $\log q(\parameters_i) = \int q(\parameters_{-i}) \log p(\dataset, \parameters) \diff \parameters_{-i} + C$
+    \item The expectation over all other factors is typically easy to compute for exponential
+      family distributions with conjugate priors (and much harder for everything else)
+    \item Leads to an algorithm closely resembling expectation maximization
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Towards more scalable variational inference}
+
+  \begin{itemize}
+  \item Given a parametric form $q(\parameters|\vparameters)$ VB is an optimization problem:
+  $L(\vparameters) = \int q(\parameters|\vparameters) \log \frac{p(\dataset,\parameters)}{q(\parameters|\vparameters)} \diff \parameters$
+  \item Gradient-based optimization generally applicable: $\vparameters \leftarrow \vparameters + \delta
+    \nabla L(\vparameters)$
+  \item Natural gradient speeds up convergence: Replace $\nabla L(\vparameters)$ with $F^{-1}(\vparameters)
+\nabla L(\vparameters)$, where $F(\vparameters)$ is the Fisher information matrix
+  consisting of expectations of second derivatives of $\log q(\parameters | \vparameters)$
+ (Honkela et al., JMLR 2010)
+  \item Stochastic gradients applicable (Hoffman et al., JMLR 2013); more about this during the seminar
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Variational inference example}
+
+  \begin{figure}
+  \begin{center}
+  \includegraphics[width=0.7\textwidth]{VBnatgrad.pdf}
+  \end{center}
+  \end{figure}
+  \vfill \hfill {\tiny Figure from Honkela et al. (JMLR 2010)}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Stochastic variational inference}
+
+  \begin{enumerate}
+  \item M.D. Hoffman, D.M. Blei, C. Wang, J. Paisley. \textbf{Stochastic Variational Inference}, JMLR 2013
+  \item R. Ranganath, C. Wang, D.M. Blei, E. Xing, \textbf{An Adaptive Learning Rate for Stochastic Variational Inference}, ICML 2013.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Doubly stochastic VB}
+
+  \begin{enumerate}
+  \item M. Titsias, M. Lazaro-Gredilla, \textbf{Doubly Stochastic Variational Bayes for non-Conjugate Inference}, ICML 2014.
+  \end{enumerate}
+
+  \begin{itemize}
+  \item Stochastic gradient by sampling from the posterior
+    approximation $q(\parameters)$ allows avoiding evaluating difficult
+    integrals
+  \item Posterior approximation as affine transformation of a standard
+    distribution
+  \item Can be combined with subsampling data for SVI
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Stochastic VB for deep learning}
+
+  \begin{enumerate}
+  \item D.J. Rezende, S. Mohamed, D. Wierstra, \textbf{Stochastic Backpropagation and Approximate Inference in Deep Generative Models}, ICML 2014.
+  \end{enumerate}
+
+  \begin{itemize}
+  \item Algorithmic similarities with Titsias \& Lazaro-Gredilla
+  \item Layered deep neural network model
+    \begin{itemize}
+    \item Latent variables at every layer
+    \item Point estimates for network weights
+    \end{itemize}
+  \item Use another deep neural network model to parametrise
+    the posterior approximation for latent variables
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Big data GPs}
+
+  \begin{enumerate}
+  \item J. Hensman, N. Fusi, N.D. Lawrence, \textbf{Gaussian Processes for Big Data}, UAI 2013.
+  \end{enumerate}
+
+  \begin{itemize}
+  \item GP inference
+    $$ y_i = f(\vx_i) + \epsilon $$
+  \item Variational sparse GPs: introduce \emph{inducing variables}
+    $$ \mathbf{u} = [f(\mathbf{z}_i)]_{i=1}^m $$
+  \item Standard variational GPs collapse $\mathbf{u}$, but that
+    cannot be done with SVI
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{SVI for binary matrix factorisation}
+
+  \begin{enumerate}
+  \item J. M. Hernandez-Lobato, N. Houlsby, Z. Ghahramani, \textbf{Stochastic Inference for Scalable Probabilistic Modeling of Binary Matrices}, ICML 2014.
+  \end{enumerate}
+
+  \begin{itemize}
+  \item Subsample both data points and ``global variables''
+  \item Nice method for deciding mini-batch size
+  \end{itemize}
+\end{frame}
+
+\section{Other}
+
+\begin{frame}
+  % Arto + Antti
+  \frametitle{Stochastic gradients in general}
+
+  \begin{enumerate}
+  \item M. Schmidt, N. Le Roux, F. Bach, \textbf{Minimizing Finite Sums with the Stochastic Average Gradient}, arXiv 2013.
+  \end{enumerate}
+  \begin{itemize}
+  \item Basic idea: introduce a memory of gradients and simply update the
+    component from one data point or mini-batch at a time
+  \item Improves the asymptotic convergence rate
+  \end{itemize}
+
+\end{frame}
+
+
 \section{MCMC}
 
 % Antti
@@ -237,159 +390,6 @@
   \end{enumerate}
 \end{frame}
 
-
-\section{VB}
-
-\begin{frame}
-  \frametitle{Variational inference basics}
-
-  \begin{itemize}
-  \item Idea: approximate the posterior distribution $p(\parameters | \dataset)$
-    with another distribution $q(\parameters)$ that is analytically tractable
-  \item Learn the approximation by minimizing the distance between $q(\parameters)$ and $p(\parameters | \dataset)$
-  \item The distance is measured by the Kullback-Leibler divergence
-    $D(q||p) = \int q(\parameters) \log \frac{q(\parameters)}{p(\parameters| \dataset)}\diff \parameters$
-  \item ...and the minimization is often converted into maximizing a lower bound on the marginal
-    likelihood (ELBO):
-    $L = \int q(\parameters) \log \frac{p(\dataset,\parameters)}{q(\parameters)} \diff \parameters= p(\dataset) - D(q||p)$
-  \item Predictions then made by replacing $\int p(\vx|\parameters) p(\parameters | \dataset) \diff \parameters$ by
-    $\int p(\vx|\parameters) q(\parameters) \diff \parameters$
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Mean-field variational inference}
-
-  \begin{itemize}
-    \item Often $q(\parameters)$ is factorized as $\prod_i q(\parameters_i)$, so that
-      we can optimize one factor at a time
-    \item Differentiating wrt to $q(\parameters_i)$ and setting the derivative to zero provides a closed-form
-      update $\log q(\parameters_i) = \int q(\parameters_{-i}) \log p(\dataset, \parameters) \diff \parameters_{-i} + C$
-    \item The expectation over all other factors is typically easy to compute for exponential
-      family distributions with conjugate priors (and much harder for everything else)
-    \item Leads to an algorithm closely resembling expectation maximization
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Towards more scalable variational inference}
-
-  \begin{itemize}
-  \item Given a parametric form $q(\parameters|\vparameters)$ VB is an optimization problem:
-  $L(\vparameters) = \int q(\parameters|\vparameters) \log \frac{p(\dataset,\parameters)}{q(\parameters|\vparameters)} \diff \parameters$
-  \item Gradient-based optimization generally applicable: $\vparameters \leftarrow \vparameters + \delta
-    \nabla L(\vparameters)$
-  \item Natural gradient speeds up convergence: Replace $\nabla L(\vparameters)$ with $F^{-1}(\vparameters)
-\nabla L(\vparameters)$, where $F(\vparameters)$ is the Fisher information matrix
-  consisting of expectations of second derivatives of $\log q(\parameters | \vparameters)$
- (Honkela et al., JMLR 2010)
-  \item Stochastic gradients applicable (Hoffman et al., JMLR 2013); more about this during the seminar
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Variational inference example}
-
-  \begin{figure}
-  \begin{center}
-  \includegraphics[width=0.7\textwidth]{VBnatgrad.pdf}
-  \end{center}
-  \end{figure}
-  \vfill \hfill {\tiny Figure from Honkela et al. (JMLR 2010)}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Stochastic variational inference}
-
-  \begin{enumerate}
-  \item M.D. Hoffman, D.M. Blei, C. Wang, J. Paisley. \textbf{Stochastic Variational Inference}, JMLR 2013
-  \item R. Ranganath, C. Wang, D.M. Blei, E. Xing, \textbf{An Adaptive Learning Rate for Stochastic Variational Inference}, ICML 2013.
-  \end{enumerate}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Doubly stochastic VB}
-
-  \begin{enumerate}
-  \item M. Titsias, M. Lazaro-Gredilla, \textbf{Doubly Stochastic Variational Bayes for non-Conjugate Inference}, ICML 2014.
-  \end{enumerate}
-
-  \begin{itemize}
-  \item Stochastic gradient by sampling from the posterior
-    approximation $q(\parameters)$ allows avoiding evaluating difficult
-    integrals
-  \item Posterior approximation as affine transformation of a standard
-    distribution
-  \item Can be combined with subsampling data for SVI
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Stochastic VB for deep learning}
-
-  \begin{enumerate}
-  \item D.J. Rezende, S. Mohamed, D. Wierstra, \textbf{Stochastic Backpropagation and Approximate Inference in Deep Generative Models}, ICML 2014.
-  \end{enumerate}
-
-  \begin{itemize}
-  \item Algorithmic similarities with Titsias \& Lazaro-Gredilla
-  \item Layered deep neural network model
-    \begin{itemize}
-    \item Latent variables at every layer
-    \item Point estimates for network weights
-    \end{itemize}
-  \item Use another deep neural network model to parametrise
-    the posterior approximation for latent variables
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Big data GPs}
-
-  \begin{enumerate}
-  \item J. Hensman, N. Fusi, N.D. Lawrence, \textbf{Gaussian Processes for Big Data}, UAI 2013.
-  \end{enumerate}
-
-  \begin{itemize}
-  \item GP inference
-    $$ y_i = f(\vx_i) + \epsilon $$
-  \item Variational sparse GPs: introduce \emph{inducing variables}
-    $$ \mathbf{u} = [f(\mathbf{z}_i)]_{i=1}^m $$
-  \item Standard variational GPs collapse $\mathbf{u}$, but that
-    cannot be done with SVI
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{SVI for binary matrix factorisation}
-
-  \begin{enumerate}
-  \item J. M. Hernandez-Lobato, N. Houlsby, Z. Ghahramani, \textbf{Stochastic Inference for Scalable Probabilistic Modeling of Binary Matrices}, ICML 2014.
-  \end{enumerate}
-
-  \begin{itemize}
-  \item Subsample both data points and ``global variables''
-  \item Nice method for deciding mini-batch size
-  \end{itemize}
-\end{frame}
-
-\section{Other}
-
-\begin{frame}
-  % Arto + Antti
-  \frametitle{Stochastic gradients in general}
-
-  \begin{enumerate}
-  %\item H. Rue, S. Martino, \textbf{Approximate Bayesian Inference for Latent Gaussian Models by Using Integrated Nested Laplace Approximations}, JRSS:B, 2009.
-  \item M. Schmidt, N. Le Roux, F. Bach, \textbf{Minimizing Finite Sums with the Stochastic Average Gradient}, arXiv 2013.
-  \end{enumerate}
-  \begin{itemize}
-  \item Basic idea: introduce a memory of gradients and simply update the
-    component from one data point or mini-batch at a time
-  \item Improves the asymptotic convergence rate
-  \end{itemize}
-
-\end{frame}
 
 \begin{frame}
   \frametitle{Discussion}
