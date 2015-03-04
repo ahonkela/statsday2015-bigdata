@@ -45,37 +45,110 @@
 \section{Introduction}
 
 \begin{frame}
-  \frametitle{Probabilistic modelling and big data}
+  \frametitle{Statistical machine learning}
 
   \begin{itemize}
-  \item New kind of thinking: data as a resource, we do not need to
+  \item Machine learning: Interest in general models, tools applicable
+    for various kinds of data
+  \item Robustness and scalability often important
+  \item Here we talk about models based on Bayesian inference
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Bayesian inference}
+
+  \begin{itemize}
+  \item Given a model family ${\cal M}$ and some data $D$, estimate
+    the posterior distribution $p(\theta|D,{\cal M})$ of the model
+    parameters
+  \item Often used for predictions by averaging over the posterior
+  \item Bayes rule:
+    \[
+    p(\theta|D) = \frac{p(D|\theta)p(\theta)}{p(D)}
+    \]
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Latent variable models}
+
+  Models with
+  \begin{itemize}
+  \item Small(ish) set of \emph{global} parameters
+  \item Large set of \emph{latent variables} or \emph{local} parameters
+  \end{itemize}
+
+  Examples:
+  \begin{itemize}
+  \item Gaussian mixture model: Global parameters are the means,
+    variances and prior weights, local parameters are the sample
+    allocations
+  \item Topic model: Global parameters are topic-to-word distributions,
+    local parameters are the document-to-topic distributions
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Big data}
+
+  \begin{itemize}
+  \item Oxford English Dictionary: ``data of a very large size, typically to the extent that its manipulation and management present significant logistical challenges''
+  \item Wikipedia: ``any collection of data sets so large and complex that it becomes difficult to process using on-hand data management tools or traditional data processing applications''
+  \item Tom Davenport: ``The broad range of new and massive data types that have appeared over the last decade or so.''
+  \item Corporate meaning: ``Any data not in our SQL'' (this we would just call data)
+  \end{itemize}
+
+  \begin{itemize}
+  \item Sometimes we simply have a lot of data, which means we
+    have to pay attention to computation speed as well, without losing
+    rigor
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Big data}
+
+  \begin{itemize}
+    \item Next generation sequencing: Terabytes of data per day
+    \item Brain imaging: fMRI scanner produces around $10^8-10^9$
+      measurements per hour
+    \item Twitter: 500 million per day, one-second peak record 140k
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Bayesian inference for big data}
+
+  Imagine running a MCMC sampler to infer sentiment of the tweets
+  in real time... Fast distributed hardware is not going to be enough.
+
+  \begin{itemize}
+  \item Evaluating the Bayes rule has $\mathcal{O}(n)$ complexity
+    for $n$ samples (even for the simplest models that assume independence)
+  \item What if $n$ is one billion? One trillion? We need to get below
+    linear complexity
+  \item Intuitively: data as a resource, we do not need to
     use it all if less is enough to solve the problem
-  \item Aim: getting below $\mathcal{O}(n)$ complexity for $n$ samples
-  \item The results are by definition approximations
-  \item Increasing bias to decrease variance over finite time
+  \item For latent variable models, the problem is optimizing the
+    global parameters without knowing all of the local ones
   \end{itemize}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Disclaimer}
+  \frametitle{Approaches}
 
   \begin{itemize}
-  \item This presentation is based on our cursory reading of papers we
-    selected in the summer for our ``Seminar in Probabilistic Models
-    for Big Data''
-  \item It is probable there are errors in our interpretations
-    \begin{itemize}
-    \item \textbf{If you are interested in the topic, please read the
-      papers yourself before drawing strong conclusions!}
-    \end{itemize}
+    \item Variational inference: Optimization for Bayesian inference
+    \item Scalable variational inference
+    \item Scalable MCMC
   \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{For which models are the methods applicable?}
 \end{frame}
 
 \section{VB}
+
+% TODO: Split basic into 2-3 slides, bring in an example
 
 \begin{frame}
   \frametitle{Variational inference basics}
@@ -94,6 +167,9 @@
   \end{itemize}
 \end{frame}
 
+% TODO: Present this already in the gradient form, just
+% concluding that we actually get closed-form updates
+
 \begin{frame}
   \frametitle{Mean-field variational inference}
 
@@ -102,11 +178,14 @@
       we can optimize one factor at a time
     \item Differentiating wrt to $q(\parameters_i)$ and setting the derivative to zero provides a closed-form
       update $\log q(\parameters_i) = \int q(\parameters_{-i}) \log p(\dataset, \parameters) \diff \parameters_{-i} + C$
-    \item The expectation over all other factors is typically easy to compute for exponential
+    \item The expectation over all other factors is typically easy to compute fo
+r exponential
       family distributions with conjugate priors (and much harder for everything else)
     \item Leads to an algorithm closely resembling expectation maximization
   \end{itemize}
 \end{frame}
+
+% TODO: Introduce stochastic optimization properly; Robbis-Monro etc
 
 \begin{frame}
   \frametitle{Towards more scalable variational inference}
@@ -120,7 +199,7 @@
 \nabla L(\vparameters)$, where $F(\vparameters)$ is the Fisher information matrix
   consisting of expectations of second derivatives of $\log q(\parameters | \vparameters)$
  (Honkela et al., JMLR 2010)
-  \item Stochastic gradients applicable (Hoffman et al., JMLR 2013); more about this during the seminar
+  %\item Stochastic gradients applicable (Hoffman et al., JMLR 2013); more about this during the seminar
   \end{itemize}
 \end{frame}
 
@@ -140,92 +219,65 @@
 
   \begin{enumerate}
   \item M.D. Hoffman, D.M. Blei, C. Wang, J. Paisley. \textbf{Stochastic Variational Inference}, JMLR 2013
-  \item R. Ranganath, C. Wang, D.M. Blei, E. Xing, \textbf{An Adaptive Learning Rate for Stochastic Variational Inference}, ICML 2013.
-  \end{enumerate}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Doubly stochastic VB}
-
-  \begin{enumerate}
-  \item M. Titsias, M. Lazaro-Gredilla, \textbf{Doubly Stochastic Variational Bayes for non-Conjugate Inference}, ICML 2014.
   \end{enumerate}
 
   \begin{itemize}
-  \item Stochastic gradient by sampling from the posterior
-    approximation $q(\parameters)$ allows avoiding evaluating difficult
-    integrals
-  \item Posterior approximation as affine transformation of a standard
-    distribution
-  \item Can be combined with subsampling data for SVI
+    \item Well-written description of the above ideas
+    \item TODO: Pick the algorithm from the paper
   \end{itemize}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Stochastic VB for deep learning}
+  \frametitle{Stochastic optimization -- how exactly?}
 
   \begin{enumerate}
-  \item D.J. Rezende, S. Mohamed, D. Wierstra, \textbf{Stochastic Backpropagation and Approximate Inference in Deep Generative Models}, ICML 2014.
+    \item Extensive literature on stochastic optimization
+    \item Adagrad, Nesterov, smoothing/memory etc for choosing the step lengths
+      and directions automatically (TODO: Mention some papers)
+    \item Active research topic, illustrating a nice merger of
+      previously separate communities
   \end{enumerate}
-
-  \begin{itemize}
-  \item Algorithmic similarities with Titsias \& Lazaro-Gredilla
-  \item Layered deep neural network model
-    \begin{itemize}
-    \item Latent variables at every layer
-    \item Point estimates for network weights
-    \end{itemize}
-  \item Use another deep neural network model to parametrise
-    the posterior approximation for latent variables
-  \end{itemize}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Big data GPs}
+  \frametitle{Some more elaborate examples}
 
   \begin{enumerate}
   \item J. Hensman, N. Fusi, N.D. Lawrence, \textbf{Gaussian Processes for Big Data}, UAI 2013.
-  \end{enumerate}
-
-  \begin{itemize}
-  \item GP inference
-    $$ y_i = f(\vx_i) + \epsilon $$
-  \item Variational sparse GPs: introduce \emph{inducing variables}
-    $$ \mathbf{u} = [f(\mathbf{z}_i)]_{i=1}^m $$
-  \item Standard variational GPs collapse $\mathbf{u}$, but that
-    cannot be done with SVI
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{SVI for binary matrix factorisation}
-
-  \begin{enumerate}
   \item J. M. Hernandez-Lobato, N. Houlsby, Z. Ghahramani, \textbf{Stochastic Inference for Scalable Probabilistic Modeling of Binary Matrices}, ICML 2014.
   \end{enumerate}
 
-  \begin{itemize}
-  \item Subsample both data points and ``global variables''
-  \item Nice method for deciding mini-batch size
-  \end{itemize}
+%  \begin{itemize}
+%  \item GP inference
+%    $$ y_i = f(\vx_i) + \epsilon $$
+%  \item Variational sparse GPs: introduce \emph{inducing variables}
+%    $$ \mathbf{u} = [f(\mathbf{z}_i)]_{i=1}^m $$
+%  \item Standard variational GPs collapse $\mathbf{u}$, but that
+%    cannot be done with SVI
+%  \end{itemize}
+
+%  \begin{itemize}
+%  \item Subsample both data points and ``global variables''
+%  \item Nice method for deciding mini-batch size
+%  \end{itemize}
 \end{frame}
 
-\section{Other}
+%\section{Other}
 
-\begin{frame}
+%\begin{frame}
   % Arto + Antti
-  \frametitle{Stochastic gradients in general}
+%  \frametitle{Stochastic gradients in general}
 
-  \begin{enumerate}
-  \item M. Schmidt, N. Le Roux, F. Bach, \textbf{Minimizing Finite Sums with the Stochastic Average Gradient}, arXiv 2013.
-  \end{enumerate}
-  \begin{itemize}
-  \item Basic idea: introduce a memory of gradients and simply update the
-    component from one data point or mini-batch at a time
-  \item Improves the asymptotic convergence rate
-  \end{itemize}
+%  \begin{enumerate}
+%  \item M. Schmidt, N. Le Roux, F. Bach, \textbf{Minimizing Finite Sums with the Stochastic Average Gradient}, arXiv 2013.
+%  \end{enumerate}
+%  \begin{itemize}
+%  \item Basic idea: introduce a memory of gradients and simply update the
+%    component from one data point or mini-batch at a time
+%  \item Improves the asymptotic convergence rate
+%  \end{itemize}
 
-\end{frame}
+%\end{frame}
 
 
 \section{MCMC}
