@@ -30,9 +30,9 @@
 \newcommand{\vx}{\mathbf{x}}
 \newcommand{\diff}{\mathrm{d}}
 
-\title{Probabilistic models for big data}
-\author{Antti Honkela and Arto Klami}
-\date{24 October 2014}
+\title{Probabilistic inference for big data}
+\author{Arto Klami and Antti Honkela}
+\date{6 March 2015}
 
 
 
@@ -438,41 +438,30 @@
 
 \begin{frame}[allowframebreaks]
   % Arto + Antti
-  \frametitle{MCMC: Stochastic gradients}
+  \frametitle{Stochastic gradients with MCMC}
 
   \begin{enumerate}
-  \item S. Ahn, A. Korattikara, M. Welling, \textbf{Bayesian posterior sampling via stochastic gradient Fisher scoring}, ICML 2012 and M. Welling, Y.W.Teh, \textbf{Bayesian Learning via Stochastic Gradient Langevin Dynamics}, ICML 2011.
-  \item S. Patterson, Y. W. Teh, \textbf{Stochastic Gradient Riemannian Langevin Dynamics on the Probability Simplex}, NIPS 2013.
-  \item S. Ahn, B. Shahbaba, M. Welling, \textbf{Distributed stochastic gradient MCMC}, ICML 2014.
-  \end{enumerate}
-\end{frame}
-
-
-\begin{frame}
-  \frametitle{MCMC: Stochastic gradients HMC}
-
-  \begin{enumerate}
+  \item M. Welling, Y.W.Teh, \textbf{Bayesian Learning via Stochastic Gradient Langevin Dynamics}, ICML 2011 and S. Ahn, A. Korattikara, M. Welling, \textbf{Bayesian posterior sampling via stochastic gradient Fisher scoring}, ICML 2012.
   \item T. Chen, E. Fox, C. Guestrin, \textbf{Stochastic Gradient Hamiltonian Monte Carlo}, ICML 2014.
   \end{enumerate}
-  
+
   \begin{itemize}
-  \item Naive introduction of stochastic gradients to HMC leads to
-    biased sampler
-    \begin{itemize}
-    \item Could be corrected by MH acceptance steps, but this is costly
-    \end{itemize}
-  \item Correction by an additional friction term
+  \item Stochastic gradient proposal, always accept
+  \item Convergence needs step sizes shrinking to zero, not usually done
   \end{itemize}
 \end{frame}
 
+
 \begin{frame}
-  \frametitle{Discussion}
+  \frametitle{Summary}
 
   \begin{itemize}
-  \item Which method should you use for problem X?
-    \begin{itemize}
-    \item Experiences?
-    \end{itemize}
+  \item VB algorithms rest on solid theoretical foundation with SGD
+  \item Ensuring convergence in practice can still be tricky
+  \item Big data MCMC theoretical analysis still developing
+  \item Cautionary tales from skipping MH-step
+  \item Subset and austerity approaches seem more reliable, but may
+    still have gotchas
   \end{itemize}
 \end{frame}
 
