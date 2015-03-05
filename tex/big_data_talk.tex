@@ -31,8 +31,9 @@
 \newcommand{\diff}{\mathrm{d}}
 
 \title{Probabilistic inference for big data}
-\author{Arto Klami and Antti Honkela}
-\date{6 March 2015}
+\author{Arto Klami and Antti Honkela\\
+Department of Computer Science, University of Helsinki}
+\date{Statistics day\\6 March 2015}
 
 
 
@@ -52,6 +53,8 @@
     for various kinds of data
   \item Robustness and scalability often important
   \item Here we talk about models based on Bayesian inference
+  \item Approximative solutions with practical value are okay, but
+    we need to know how they behave
   \end{itemize}
 \end{frame}
 
@@ -59,7 +62,7 @@
   \frametitle{Bayesian inference}
 
   \begin{itemize}
-  \item Given a model family ${\cal M}$ and some data $D$, estimate
+  \item Given a model family ${\cal M}$ and some data $\dataset$, estimate
     the posterior distribution $p(\parameters|\dataset,{\cal M})$ of the model
     parameters
   \item Often used for predictions by averaging over the posterior
@@ -67,25 +70,6 @@
     \[
     p(\parameters|\dataset) = \frac{p(\dataset|\parameters)p(\parameters)}{p(\dataset)}
     \]
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Latent variable models}
-
-  Models with
-  \begin{itemize}
-  \item Small(ish) set of \emph{global} parameters
-  \item Large set of \emph{latent variables} or \emph{local} parameters
-  \end{itemize}
-
-  Examples:
-  \begin{itemize}
-  \item Gaussian mixture model: Global parameters are the means,
-    variances and prior weights, local parameters are the sample
-    allocations
-  \item Topic model: Global parameters are topic-to-word distributions,
-    local parameters are the document-to-topic distributions
   \end{itemize}
 \end{frame}
 
@@ -116,13 +100,16 @@
     \item Twitter: 500 million per day, one-second peak record 140k
   \end{itemize}
 
+  Sheer scale is not what matters, but often the processes to be
+  modelled are so complex we need a lot of data to fit a complex model
+
 \end{frame}
 
 \begin{frame}
   \frametitle{Bayesian inference for big data}
 
-  Imagine running a MCMC sampler to infer sentiment of the tweets
-  in real time... Fast distributed hardware is not going to be enough.
+  Imagine running a MCMC sampler to capture topics in real-time
+  Twitter stream -- fast distributed hardware is just not enough
 
   \begin{itemize}
   \item Evaluating the Bayes rule has $\mathcal{O}(n)$ complexity
@@ -131,8 +118,8 @@
     linear complexity
   \item Intuitively: data as a resource, we do not need to
     use it all if less is enough to solve the problem
-  \item For latent variable models, the problem is optimizing the
-    global parameters without knowing all of the local ones
+  %\item For latent variable models, the problem is optimizing the
+  %  global parameters without knowing all of the local ones
   \end{itemize}
 \end{frame}
 
@@ -148,113 +135,239 @@
 
 \section{VB}
 
-% TODO: Split basic into 2-3 slides, bring in an example
+\begin{frame}
+  \frametitle{Latent variable models}
+
+  \begin{figure}
+  \begin{center}
+  \includegraphics[width=0.35\textwidth]{LVM.png}
+  \end{center}
+  \end{figure}
+
+  Models with
+  \begin{itemize}
+  \item Small(ish) set of \emph{global} parameters: $\beta$
+  \item Large set of \emph{latent variables} or \emph{local} parameters: $z$
+  \end{itemize}
+
+  Examples:
+  \begin{itemize}
+  \item Gaussian mixture model: Global parameters are the means,
+    variances and prior weights, local parameters are the sample
+    allocations
+  \item Topic model: Global parameters are topic-to-word distributions,
+    local parameters are the document-to-topic distributions
+  \end{itemize}
+\end{frame}
 
 \begin{frame}
   \frametitle{Variational inference basics}
 
   \begin{itemize}
-  \item Idea: approximate the posterior distribution $p(\parameters | \dataset)$
-    with another distribution $q(\parameters|\vparameters)$ that is more
+  \item Idea: approximate the posterior distribution $p(\beta, z| \dataset)$
+    with another distribution $q(\beta,z|\lambda,\phi)$ that is more
     tractable
-  \item Learn the approximation by minimizing the distance between $q(\parameters|\vparameters)$ and $p(\parameters | \dataset)$
+  \item Learn the approximation by minimizing the distance between $q(\beta,z|\lambda,\phi)$ and $p(\beta, z |\dataset)$
   \item The distance is measured by the Kullback-Leibler divergence
-    $D(q||p) = \int q(\parameters) \log \frac{q(\parameters|\vparameters)}{p(\parameters| \dataset)}\diff \parameters$
-%  \item ...and the minimization is often converted into maximizing a lower bound on the marginal
-%    likelihood (ELBO):
-%    $L = \int q(\parameters) \log \frac{p(\dataset,\parameters)}{q(\parameters)} \diff \parameters= p(\dataset) - D(q||p)$
-  \item Predictions then made by replacing $\int p(\vx|\parameters) p(\parameters | \dataset) \diff \parameters$ with
-    $\int p(\vx|\parameters) q(\parameters) \diff \parameters$
+    $D(q||p) = \int q(\beta,z) \log \frac{q(\beta,z)}{p(\beta,z| \dataset)}\diff \beta \diff z$
+  \item ...and the minimization is often converted into maximizing a lower bound on the marginal
+    likelihood (ELBO):
+    $L = \int q(\beta,z) \log \frac{p(\dataset,\beta,z)}{q(\beta,z)} \diff \beta \diff z = p(\dataset) - D(q||p)$
+  \item Predictions made by integrating over the approximation
   \end{itemize}
 
   Converts Bayesian inference into an optimization problem!
 \end{frame}
 
-% TODO: Present this already in the gradient form, just
-% concluding that we actually get closed-form updates
+\begin{frame}
+  \frametitle{Variational inference basics}
+
+  \begin{figure}
+  \begin{center}
+  \includegraphics[width=0.7\textwidth]{VBexample1.pdf}
+  \end{center}
+  \end{figure}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Variational inference basics}
+
+  \begin{figure}
+  \begin{center}
+  \includegraphics[width=0.7\textwidth]{VBexample2.pdf}
+  \end{center}
+  \end{figure}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Mean-field variational inference}
+
+  Latent variable model:\\
+  Global parameter $\beta$, global variational parameter $\lambda$\\
+  Local parameters $z_i$, local variational parameters $\phi_i$
+
+  \begin{itemize}
+    \item Mean-field approximation:
+      $q(\beta,z) = q(\beta|\lambda) \prod_{i}^n q(z_i|\phi_i)$
+    \item As a function of $\lambda$, the cost function becomes
+      $L(\lambda) = \langle \log p(\beta|\dataset,z)
+      - \log q(\beta|\lambda)\rangle_{q} + \text{const}$
+    \item Gradient-based optimization directly applicable, for each
+      term at a time
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Gradients and exponential families}
+
+  Exponential family:
+  \begin{align*}
+  p(\beta|\dataset,z) &= h_p(\beta) e^{\eta^T t(\beta) - a_p(\eta)} \\
+  q(\beta|\lambda) &= h_q(\beta) e^{\lambda^T t(\beta) - a_q(\lambda)}
+  %\langle \log p(\beta|\dataset,z) \rangle &= \langle \eta \rangle^T \nabla a_q(\lambda) + \text{const}\\
+  %\langle \log q(\beta|\lambda) \rangle &= \lambda^T \nabla a_q(\lambda) - a_q(\lambda)
+  \end{align*}
+  ...with nice property $\langle t(\beta) \rangle_q = \nabla a_q(\lambda)$
+
+  \begin{itemize}
+    \item The cost function becomes
+      $L(\lambda) = \langle \eta \rangle^T_q \nabla a_q(\lambda)
+      - \lambda^T \nabla a_q(\lambda) + a_q(\lambda) + \text{const}$
+    \item ...and the gradient hence
+      $\nabla L(\lambda) = \nabla^2 a_q(\lambda)
+      (\langle \eta \rangle_q - \lambda)$
+    \item Closed-form updates $\lambda = \langle \eta \rangle_q$
+      where $\eta$ is some function of the data and the local
+      parameters
+  \end{itemize}
+  Note the close relationship with Gibbs sampling: Now we take the
+  expectation of the conditional instead of sampling from it!
+\end{frame}
 
 \begin{frame}
   \frametitle{Mean-field variational inference}
 
   \begin{itemize}
-    \item Often $q(\parameters|\vparameters)$ is made tractable by
-      factorizing it as $\prod_i q(\parameters_i|\vparameters_i)$
-    \item The optimization is equivalently expressed as maximization of a lower-bound for the marginal likelihood
-      $L = \int q(\parameters) \log \frac{p(\dataset,\parameters)}{q(\parameters)} \diff \parameters= p(\dataset) - D(q||p)$
-    \item Gradient-based optimization directly applicable:
-      Compute gradient wrt $\vparameters_i$ to optimize one term
-      in the factorization
-
-    \item Differentiating wrt to $q(\parameters_i)$ and setting the derivative to zero provides a closed-form
-      update $\log q(\parameters_i) = \int q(\parameters_{-i}) \log p(\dataset, \parameters) \diff \parameters_{-i} + C$
-    \item The expectation over all other factors is typically easy to compute
-      for exponential
-      family distributions with conjugate priors
-    \item Leads to an algorithm closely resembling expectation maximization
+    \item The Bayesian inference now converted into an optimization
+      problem with simple EM-like alternating updates
+    \item Computation similar to Gibbs samplers, but often converges
+      in tens/hundreds of iterations
+    \item Complexity still $\mathcal{O}(n)$, since evaluating the
+      expectation $\langle \eta \rangle_q$ requires processing all data points
   \end{itemize}
 \end{frame}
 
-% TODO: Introduce stochastic optimization properly; Robbis-Monro etc
-
 \begin{frame}
-  \frametitle{Towards more scalable variational inference}
+  \frametitle{Gradient descent and natural gradients}
 
   \begin{itemize}
-  \item Given a parametric form $q(\parameters|\vparameters)$ VB is an optimization problem:
-  $L(\vparameters) = \int q(\parameters|\vparameters) \log \frac{p(\dataset,\parameters)}{q(\parameters|\vparameters)} \diff \parameters$
-  \item Gradient-based optimization generally applicable: $\vparameters \leftarrow \vparameters + \delta
-    \nabla L(\vparameters)$
-  \item Natural gradient speeds up convergence: Replace $\nabla L(\vparameters)$ with $F^{-1}(\vparameters)
-\nabla L(\vparameters)$, where $F(\vparameters)$ is the Fisher information matrix
-  consisting of expectations of second derivatives of $\log q(\parameters | \vparameters)$
- (Honkela et al., JMLR 2010)
-  %\item Stochastic gradients applicable (Hoffman et al., JMLR 2013); more about this during the seminar
+    \item Gradient descent: $\lambda^t \leftarrow \lambda^{t-1}
+      + \rho_t \nabla L(\lambda)$
+    \item Natural gradients: Pre-multiply with the inverse Fisher
+      information matrix for faster convergence
+    \item In the exponential family makes things simpler since
+      the term $\nabla^2 a(\vparameters_i)$ disappears:
+      $\nabla L(\lambda) = \langle \eta \rangle_q - \lambda$
   \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Variational inference example}
-
   \begin{figure}
   \begin{center}
-  \includegraphics[width=0.7\textwidth]{VBnatgrad.pdf}
+  \includegraphics[width=0.4\textwidth]{VBnatgrad.pdf}
   \end{center}
   \end{figure}
   \vfill \hfill {\tiny Figure from Honkela et al. (JMLR 2010)}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Stochastic variational inference}
-
-  \begin{enumerate}
-  \item M.D. Hoffman, D.M. Blei, C. Wang, J. Paisley. \textbf{Stochastic Variational Inference}, JMLR 2013
-  \end{enumerate}
+  \frametitle{Stochastic gradients}
 
   \begin{itemize}
-    \item Well-written description of the above ideas
-    \item TODO: Pick the algorithm from the paper
+    \item Computing the gradient still takes $\mathcal{O}(n)$
+    \item Stochastic optimization to the rescue:
+      Instead of evaluating the gradient exactly, we can use
+      an (unbiased) estimate
+    \item Basic idea: Replace the natural gradient
+      $\nabla L(\lambda) = \langle \eta \rangle_q - \lambda$
+      with stochastic estimate based on one (or a few) data point
+    \item Robbins-Monro (1951): Stochastic gradient descent
+      finds the correct optimum if step lengths $\rho_t$ decrease
+      over time so that $\sum_t \rho_t = \infty$ and $\sum_t \rho_t^2 < \infty$
   \end{itemize}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Stochastic optimization -- how exactly?}
+  \frametitle{Stochastic variational inference}
 
-  \begin{enumerate}
-    \item Extensive literature on stochastic optimization
-    \item Adagrad, Nesterov, smoothing/memory etc for choosing the step lengths
-      and directions automatically (TODO: Mention some papers)
-    \item Active research topic, illustrating a nice merger of
-      previously separate communities
-  \end{enumerate}
+  The above ideas properly formulated by
+  M.D. Hoffman, D.M. Blei, C. Wang, and J. Paisley. \textbf{Stochastic Variational Inference}, JMLR 2013
+
+  \begin{figure}
+  \begin{center}
+  \includegraphics[width=0.7\textwidth]{SVI.png}
+  \end{center}
+  \end{figure}
+
 \end{frame}
 
 \begin{frame}
-  \frametitle{Some more elaborate examples}
+  \frametitle{Stochastic variational inference}
 
-  \begin{enumerate}
-  \item J. Hensman, N. Fusi, N.D. Lawrence, \textbf{Gaussian Processes for Big Data}, UAI 2013.
-  \item J. M. Hernandez-Lobato, N. Houlsby, Z. Ghahramani, \textbf{Stochastic Inference for Scalable Probabilistic Modeling of Binary Matrices}, ICML 2014.
-  \end{enumerate}
+  \begin{figure}
+  \begin{center}
+  \includegraphics[width=0.9\textwidth]{mixture1.pdf}
+  \end{center}
+  \end{figure}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Stochastic variational inference}
+
+  \begin{figure}
+  \begin{center}
+  \includegraphics[width=0.9\textwidth]{mixture2.pdf}
+  \end{center}
+  \end{figure}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Stochastic variational inference}
+
+  \begin{figure}
+  \begin{center}
+  \includegraphics[width=0.9\textwidth]{mixture3.pdf}
+  \end{center}
+  \end{figure}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Stochastic variational inference in practice}
+
+  \begin{itemize}
+  \item Stochastic optimization has theoretical guarantees, but
+    practical convergence depends heavily on the details
+  \item Several ways of adapting step lengths etc presented over
+    the years in the optimization community, resulting in various
+    theoretical convergence rates
+  \item Some practical tools: Adagrad, Nesterov's method, Smoothing
+  \item Active research topic: ML community currently pushing out
+    a lot of papers on both improving the convergence and/or speed,
+    and on presenting the algorithmic details for slightly more general setups
+  \end{itemize}
+\end{frame}
+
+
+
+%\begin{frame}
+%  \frametitle{Some more elaborate examples}
+
+%  \begin{enumerate}
+%  \item J. Hensman, N. Fusi, N.D. Lawrence, \textbf{Gaussian Processes for Big Data}, UAI 2013.
+%  \item J. M. Hernandez-Lobato, N. Houlsby, Z. Ghahramani, \textbf{Stochastic Inference for Scalable Probabilistic Modeling of Binary Matrices}, ICML 2014.
+%  \end{enumerate}
 
 %  \begin{itemize}
 %  \item GP inference
@@ -269,7 +382,7 @@
 %  \item Subsample both data points and ``global variables''
 %  \item Nice method for deciding mini-batch size
 %  \end{itemize}
-\end{frame}
+%\end{frame}
 
 %\section{Other}
 
