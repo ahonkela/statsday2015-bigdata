@@ -487,18 +487,25 @@ Department of Computer Science, University of Helsinki}
 \begin{frame}
   \frametitle{Solution 1: Subset and parallelised sampling}
 
-  \begin{enumerate}
-  \item D. Maclaurin, R.P. Adams, \textbf{Firefly Monte Carlo: Exact MCMC with Subsets of Data}, UAI 2014.
-  \item W. Neiswanger, E. Xing, C. Wang, \textbf{Asymptotically Exact, Embarrassingly Parallel MCMC}, UAI 2014; S.L. Scott, A.W. Blocker, F.V. Bonassi, H.A. Chipman, E.I. George, R.E. McCulloch, \textbf{Bayes and Big Data: The Consensus Monte Carlo Algorithm}, Bayes 250, 2013; and T. Campbell, J. How, \textbf{Approximate Decentralized Bayesian Inference}, UAI 2014. 
-  \end{enumerate}
+  \begin{itemize}
+  \item W. Neiswanger, E. Xing, C. Wang, \textbf{Asymptotically Exact, Embarrassingly Parallel MCMC}, UAI 2014
+  \end{itemize}
+
+  \begin{itemize}
+  \item Factorise the posterior
+    $$ p(\parameters | \dataset) \propto \prod_{m=1}^M \left[ p(\parameters)^{\frac{1}{M}} p(\dataset_m | \parameters) \right], $$
+    where $\dataset = \bigcup_{m=1}^M \dataset_m$
+  \item Sample from each subposterior independently in parallel
+  \item Combine the samples using density estimates
+  \end{itemize}
 \end{frame}
 
 \begin{frame}
   \frametitle{Solution 2: Approximate acceptance}
 
-  \begin{enumerate}
+  \begin{itemize}
   \item A. Korattikara, Y. Chen, M. Welling, \textbf{Austerity in MCMC Land: Cutting the Metropolis--Hastings Budget}, ICML 2014.
-  \end{enumerate}
+  \end{itemize}
 
   \begin{itemize}
   \item Basic idea: more efficient use of data by approximating the
@@ -532,7 +539,7 @@ Department of Computer Science, University of Helsinki}
   \frametitle{Langevin and Hamiltonian dynamics in MCMC}
 
   Langevin dynamics proposal:
-  $$ \parameters^* = \parameters + \frac{\epsilon}{2} \nabla_\parameters p(\dataset, \parameters) + N(0, \epsilon I) $$
+  $$ \parameters^* = \parameters + \frac{\epsilon}{2} \nabla_\parameters \log p(\dataset, \parameters) + N(0, \epsilon I) $$
   \begin{itemize}
   \item Acceptance rate tends to one as $\epsilon \rightarrow 0$
   \end{itemize}
@@ -553,14 +560,15 @@ Department of Computer Science, University of Helsinki}
   % Arto + Antti
   \frametitle{Stochastic gradients with MCMC}
 
-  \begin{enumerate}
+  \begin{itemize}
   \item M. Welling, Y.W.Teh, \textbf{Bayesian Learning via Stochastic Gradient Langevin Dynamics}, ICML 2011 and S. Ahn, A. Korattikara, M. Welling, \textbf{Bayesian posterior sampling via stochastic gradient Fisher scoring}, ICML 2012.
   \item T. Chen, E. Fox, C. Guestrin, \textbf{Stochastic Gradient Hamiltonian Monte Carlo}, ICML 2014.
-  \end{enumerate}
+  \end{itemize}
 
   \begin{itemize}
   \item Stochastic gradient proposal, always accept
-  \item Convergence needs step sizes shrinking to zero, not usually done
+  \item Convergence theory needs step sizes shrinking to zero, often
+    ignored in practice
   \end{itemize}
 \end{frame}
 
