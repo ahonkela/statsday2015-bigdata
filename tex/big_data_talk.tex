@@ -83,11 +83,11 @@ Department of Computer Science, University of Helsinki}
   \item Corporate meaning: ``Any data not in our SQL'' (this we would just call data)
   \end{itemize}
 
-  \begin{itemize}
-  \item Sometimes we simply have a lot of data, which means we
+%  \begin{itemize}
+  Sometimes we simply have a lot of data, which means we
     have to pay attention to computation speed as well, without losing
     rigor
-  \end{itemize}
+%  \end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -100,8 +100,10 @@ Department of Computer Science, University of Helsinki}
     \item Twitter: 500 million per day, one-second peak record 140k
   \end{itemize}
 
-  Sheer scale is not what matters, but often the processes to be
-  modelled are so complex we need a lot of data to fit a complex model
+  %Sheer scale is not what matters, but often the processes to be
+  %modelled are so complex we need a lot of data to fit a complex model
+  ``Never mind the big data here's the big models'' -- what matters
+  is what we can do, not how much data we have
 
 \end{frame}
 
@@ -167,10 +169,10 @@ Department of Computer Science, University of Helsinki}
   \item Idea: approximate the posterior distribution $p(\beta, z| \dataset)$
     with another distribution $q(\beta,z|\lambda,\phi)$ that is more
     tractable
-  \item Learn the approximation by minimizing the distance between $q(\beta,z|\lambda,\phi)$ and $p(\beta, z |\dataset)$
-  \item The distance is measured by the Kullback-Leibler divergence
-    $D(q||p) = \int q(\beta,z) \log \frac{q(\beta,z)}{p(\beta,z| \dataset)}\diff \beta \diff z$
-  \item ...and the minimization is often converted into maximizing a lower bound on the marginal
+  \item Learn the approximation by minimizing the Kullback-Leibler divergence between $q(\beta,z|\lambda,\phi)$ and $p(\beta, z |\dataset)$
+  %\item The distance is measured by the Kullback-Leibler divergence
+  %  $D(q||p) = \int q(\beta,z) \log \frac{q(\beta,z)}{p(\beta,z| \dataset)}\diff \beta \diff z$
+  \item ...which is equivalent to maximizing a lower bound for the marginal
     likelihood (ELBO):
     $L = \int q(\beta,z) \log \frac{p(\dataset,\beta,z)}{q(\beta,z)} \diff \beta \diff z = p(\dataset) - D(q||p)$
   \item Predictions made by integrating over the approximation
@@ -267,7 +269,7 @@ Department of Computer Science, University of Helsinki}
       + \rho_t \nabla L(\lambda)$
     \item Natural gradients: Pre-multiply with the inverse Fisher
       information matrix for faster convergence
-    \item In the exponential family makes things simpler since
+    \item The exponential family makes things simpler since
       the term $\nabla^2 a(\vparameters_i)$ disappears:
       $\nabla L(\lambda) = \langle \eta \rangle_q - \lambda$
   \end{itemize}
@@ -349,9 +351,7 @@ Department of Computer Science, University of Helsinki}
   \begin{itemize}
   \item Stochastic optimization has theoretical guarantees, but
     practical convergence depends heavily on the details
-  \item Several ways of adapting step lengths etc presented over
-    the years in the optimization community, resulting in various
-    theoretical convergence rates
+  \item A lot can be borrowed from the stochastic optimization community
   \item Some practical tools: Adagrad, Nesterov's method, Smoothing
   \item Active research topic: ML community currently pushing out
     a lot of papers on both improving the convergence and/or speed,
